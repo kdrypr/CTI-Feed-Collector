@@ -1,6 +1,15 @@
 # CTI-Feeder
 Open Source Cyber Threat Intelligence Feed Collector
 
+## Installation
+
+pip3 -r requirements.txt
+
+
+## Start
+
+python3.8 cti_feeder.py
+
 ## How to
 
 **The script collect the data from all the specified sources, converts it to json format and writes it to the files with the source name.**
@@ -17,11 +26,6 @@ Open Source Cyber Threat Intelligence Feed Collector
 * www.ipspamlist.com
 * charles.the-haleys.org
 * api.blocklist.de
-
-## Installation
-
-pip3 -r requirements.txt
-
 
 ## Roadmap
 
