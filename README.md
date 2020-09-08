@@ -18,6 +18,10 @@ Open Source Cyber Threat Intelligence Feed Collector
 * charles.the-haleys.org
 * api.blocklist.de
 
+## Installation
+
+pip3 -r requirements.txt
+
 
 ## Roadmap
 
