@@ -1,5 +1,5 @@
 # CTI-Feeder
-* Open Source Cyber Threat Intelligence Feed Collector
+Open Source Cyber Threat Intelligence Feed Collector
 
 ## Installation
 
@@ -8,7 +8,7 @@
 
 ## Start
 
-python3.8 cti_feeder.py
+* python3.8 cti_feeder.py
 
 ## How to
 
