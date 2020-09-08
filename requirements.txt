@@ -1,7 +1,6 @@
-csv
-json
-os
-pytz
-datetime
-itertools
-urllib.request
+python-csv==0.0.13
+simplejson==3.16.0
+pytz==2019.3
+DateTime==4.3
+more-itertools==8.5.0
+urllib3==1.25.8
