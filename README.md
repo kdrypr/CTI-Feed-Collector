@@ -1,9 +1,9 @@
 # CTI-Feeder
-Open Source Cyber Threat Intelligence Feed Collector
+* Open Source Cyber Threat Intelligence Feed Collector
 
 ## Installation
 
-pip3 -r requirements.txt
+* pip3 install -r requirements.txt
 
 
 ## Start
