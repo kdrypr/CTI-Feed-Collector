@@ -14,9 +14,8 @@ from elasticsearch import Elasticsearch
 tz = pytz.timezone('Europe/Istanbul')
 logging.basicConfig(filename='CTI.log', filemode='a', format='%(asctime)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
-es = Elasticsearch(['http://localhost:9200'])
-
 elasticUrl = 'http://localhost:9200/'
+es = Elasticsearch([elasticUrl])
 
 
 def createFolders():
