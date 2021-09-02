@@ -1,35 +1,51 @@
 import csv
 import json
 import os
+import zipfile
 import pytz
 from datetime import datetime
 from itertools import islice
 from urllib.request import Request, urlopen
+import logging
 
 tz = pytz.timezone('Europe/Istanbul')
+logging.basicConfig(filename='CTI.log', filemode='a', format='%(asctime)s - %(message)s',
+                    datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+
+
+def createFolders():
+    if not os.path.isdir("files"):
+        os.mkdir("files")
+        logging.info('Folder not found! Files folder created.')
+
+    if not os.path.isdir("archive"):
+        os.mkdir("archive")
+        logging.info('Folder not found! Archive folder created.')
 
 
 def iocfeed():
     req = Request('https://iocfeed.mrlooquer.com/feed.json', headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read()
     output = json.loads(data)
-    with open('iocfeed.json', 'w') as iocfeed_file:
+    with open('files/iocfeed.json', 'w') as iocfeed_file:
         json.dump(output, iocfeed_file)
     iocfeed_file.close()
     # split single line json
-    readFiles = open('iocfeed.json', 'r')
+    readFiles = open('files/iocfeed.json', 'r')
     jsonData = readFiles.readline()
     d = "},"
     # split but keep delimeter
     jsonData = [e + d for e in jsonData.split(d) if e]
-    with open("lastIOCFeed.json", 'a') as iocJson:
+    with open("files/lastIOCFeed.json", 'a') as iocJson:
         for data in jsonData[:-1]:
             iocJson.write(data[1:-1] + "\n")
             if data == jsonData[:-1]:
                 iocJson.write(data[:-2])
     iocJson.close()
-    os.remove('iocfeed.json')
-    os.rename('lastIOCFeed.json', 'iocfeed.json')
+    os.remove('files/iocfeed.json')
+    os.rename('files/lastIOCFeed.json', 'files/iocfeed.json')
+    zipfile.ZipFile('archive/iocfeed.zip', mode='w').write('files/iocfeed.json', arcname='iocfeed.json')
+    logging.info('Mrlooquer IOC Feeds updated and zipped.')
 
 
 def openphish():
@@ -38,31 +54,35 @@ def openphish():
     data = urlopen(req).read().decode('utf-8')
     data = data.split("\n")
     for line in data:
-        with open('openphish.json', 'a') as openphish_file:
+        with open('files/openphish.json', 'a') as openphish_file:
             openphish_file.write("{\"url\":\"" + line + "\", \"category\": \"phishing\", \"last_update\": \"" + str(
                 TurkeyTime) + "\"}\n")
     openphish_file.close()
+    zipfile.ZipFile('archive/openphish.zip', mode='w').write('files/openphish.json', arcname='openphish.json')
+    logging.info('Openphish feeds updated and zipped.')
 
 
 def urlhaus():
     req = Request('https://urlhaus.abuse.ch/downloads/csv_online/', headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read().decode('utf-8')
     dataLast = data[9:]
-    with open('urlhaus.csv', 'w') as urlhaus_csv_file:
+    with open('files/urlhaus.csv', 'w') as urlhaus_csv_file:
         urlhaus_csv_file.write(dataLast)
-    with open('urlhaus.csv', 'r') as fin, open('urlhaus2.csv', 'w') as fout:
+    with open('files/urlhaus.csv', 'r') as fin, open('files/urlhaus2.csv', 'w') as fout:
         newFile = islice(fin, 9, None)
         fout.writelines(newFile)
-    os.remove('urlhaus.csv')
-    os.rename('urlhaus2.csv', 'urlhaus.csv')
-    csvFile = open('urlhaus.csv', 'r')
-    jsonFile = open('urlhaus.json', 'w')
+    os.remove('files/urlhaus.csv')
+    os.rename('files/urlhaus2.csv', 'files/urlhaus.csv')
+    csvFile = open('files/urlhaus.csv', 'r')
+    jsonFile = open('files/urlhaus.json', 'w')
     fieldNames = ("id", "dateadded", "url", "url_status", "threat", "tags", "urlhaus_link", "reporter")
     reader = csv.DictReader(csvFile, fieldNames)
     for row in reader:
         json.dump(row, jsonFile)
         jsonFile.write("\n")
-    os.remove('urlhaus.csv')
+    os.remove('files/urlhaus.csv')
+    zipfile.ZipFile('archive/urlhaus.zip', mode='w').write('files/urlhaus.json', arcname='urlhaus.json')
+    logging.info('URLHAUS feed updated.')
 
 
 def malshare():
@@ -71,85 +91,93 @@ def malshare():
         headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read()
     output = json.loads(data)
-    with open('malshare.json', 'w') as malshare_file:
+    with open('files/malshare.json', 'w') as malshare_file:
         json.dump(output, malshare_file)
     malshare_file.close()
     # split single line json
-    readFiles = open('malshare.json', 'r')
+    readFiles = open('files/malshare.json', 'r')
     jsonData = readFiles.readline()
     d = "},"
     # split but keep delimeter
     jsonData = [e + d for e in jsonData.split(d) if e]
-    with open("lastmalshare.json", 'a') as malshare_Json:
+    with open("files/lastmalshare.json", 'a') as malshare_Json:
         for data in jsonData[:-1]:
             malshare_Json.write(data[1:-1] + "\n")
             if data == jsonData[:-1]:
                 malshare_Json.write(data[:-2])
     malshare_Json.close()
-    os.remove('malshare.json')
-    os.rename('lastmalshare.json', 'malshare.json')
+    os.remove('files/malshare.json')
+    os.rename('files/lastmalshare.json', 'files/malshare.json')
+    zipfile.ZipFile('archive/malshare.zip', mode='w').write('files/malshare.json', arcname='malshare.json')
+    logging.info('Malshare feeds updated and zipped.')
 
 
 def sslblAbuse():
     req = Request('https://sslbl.abuse.ch/blacklist/sslipblacklist.csv', headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read().decode('utf-8')
-    with open('sslblAbuse.csv', 'w') as sslblAbuse_file:
+    with open('files/sslblAbuse.csv', 'w') as sslblAbuse_file:
         sslblAbuse_file.write(data)
-    with open('sslblAbuse.csv', 'r') as fin, open('sslblAbuse2.csv', 'w') as fout:
+    with open('files/sslblAbuse.csv', 'r') as fin, open('files/sslblAbuse2.csv', 'w') as fout:
         newFile = islice(fin, 9, None)
         fout.writelines(newFile)
-    os.remove('sslblAbuse.csv')
-    os.rename('sslblAbuse2.csv', 'sslblAbuse.csv')
-    csvFile = open('sslblAbuse.csv', 'r')
-    jsonFile = open('sslblAbuse.json', 'w')
+    os.remove('files/sslblAbuse.csv')
+    os.rename('files/sslblAbuse2.csv', 'files/sslblAbuse.csv')
+    csvFile = open('files/sslblAbuse.csv', 'r')
+    jsonFile = open('files/sslblAbuse.json', 'w')
     fieldNames = ("Firstseen", "DstIP", "DstPort")
     reader = csv.DictReader(csvFile, fieldNames)
     for row in reader:
         json.dump(row, jsonFile)
         jsonFile.write("\n")
-    os.remove('sslblAbuse.csv')
+    os.remove('files/sslblAbuse.csv')
+    zipfile.ZipFile('archive/sslblAbuse.zip', mode='w').write('files/sslblAbuse.json', arcname='sslblAbuse.json')
+    logging.info('SSL BL ABUSE feeds updated and zipped.')
 
 
 def feodotrackerAbuse():
     req = Request('https://feodotracker.abuse.ch/downloads/ipblocklist.csv', headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read().decode('utf-8')
     dataLast = data[9:]
-    with open('feodotrackerAbuse.csv', 'w') as feodotrackerAbuse_file:
+    with open('files/feodotrackerAbuse.csv', 'w') as feodotrackerAbuse_file:
         feodotrackerAbuse_file.write(dataLast)
-    with open('feodotrackerAbuse.csv', 'r') as fin, open('feodotrackerAbuse2.csv', 'w') as fout:
+    with open('files/feodotrackerAbuse.csv', 'r') as fin, open('files/feodotrackerAbuse2.csv', 'w') as fout:
         newFile = islice(fin, 9, None)
         fout.writelines(newFile)
-    os.remove('feodotrackerAbuse.csv')
-    os.rename('feodotrackerAbuse2.csv', 'feodotrackerAbuse.csv')
-    csvFile = open('feodotrackerAbuse.csv', 'r')
-    jsonFile = open('feodotrackerAbuse.json', 'w')
+    os.remove('files/feodotrackerAbuse.csv')
+    os.rename('files/feodotrackerAbuse2.csv', 'files/feodotrackerAbuse.csv')
+    csvFile = open('files/feodotrackerAbuse.csv', 'r')
+    jsonFile = open('files/feodotrackerAbuse.json', 'w')
     fieldNames = ("Firstseen", "DstIP", "DstPort", "LastOnline", "Malware")
     reader = csv.DictReader(csvFile, fieldNames)
     for row in reader:
         json.dump(row, jsonFile)
         jsonFile.write("\n")
-    os.remove('feodotrackerAbuse.csv')
+    os.remove('files/feodotrackerAbuse.csv')
+    zipfile.ZipFile('archive/feodotrackerAbuse.zip', mode='w').write('files/feodotrackerAbuse.json', arcname='feodotrackerAbuse.json')
+    logging.info('Feodo Tracker feeds updated and zipped.')
 
 
 def IPSpamList():
     req = Request('http://www.ipspamlist.com/public_feeds.csv', headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read().decode('utf-8')
     dataLast = data[9:]
-    with open('IPSpamList.csv', 'w') as feodotrackerAbuse_file:
+    with open('files/IPSpamList.csv', 'w') as feodotrackerAbuse_file:
         feodotrackerAbuse_file.write(dataLast)
-    with open('IPSpamList.csv', 'r') as fin, open('IPSpamList2.csv', 'w') as fout:
+    with open('files/IPSpamList.csv', 'r') as fin, open('files/IPSpamList2.csv', 'w') as fout:
         newFile = islice(fin, 10, None)
         fout.writelines(newFile)
-    os.remove('IPSpamList.csv')
-    os.rename('IPSpamList2.csv', 'IPSpamList.csv')
-    csvFile = open('IPSpamList.csv', 'r')
-    jsonFile = open('IPSpamList.json', 'w')
+    os.remove('files/IPSpamList.csv')
+    os.rename('files/IPSpamList2.csv', 'files/IPSpamList.csv')
+    csvFile = open('files/IPSpamList.csv', 'r')
+    jsonFile = open('files/IPSpamList.json', 'w')
     fieldNames = ("first_seen", "last_seen", "ip_address", "category", "attack_count")
     reader = csv.DictReader(csvFile, fieldNames)
     for row in reader:
         json.dump(row, jsonFile)
         jsonFile.write("\n")
-    os.remove('IPSpamList.csv')
+    os.remove('files/IPSpamList.csv')
+    zipfile.ZipFile('archive/IPSpamList.zip', mode='w').write('files/IPSpamList.json', arcname='IPSpamList.json')
+    logging.info('IP Spam List feeds updated and zipped.')
 
 
 def charlesTheHaleysSSHAttacks():
@@ -157,15 +185,17 @@ def charlesTheHaleysSSHAttacks():
                   headers={'User-Agent': 'Mozilla/5.0'})
     data = urlopen(req).read().decode('utf-8')
     dataLast = data[2:]
-    with open('charlesTheHaleysSSHAttacks.txt', 'w') as fin:
+    with open('files/charlesTheHaleysSSHAttacks.txt', 'w') as fin:
         fin.write(dataLast)
-    readFile = open('charlesTheHaleysSSHAttacks.txt', 'r')
+    readFile = open('files/charlesTheHaleysSSHAttacks.txt', 'r')
     for row in readFile:
         lastRow = row.split(':')
-        with open('charlesTheHaleysSSHAttacks.json', 'a') as charlesTheHaleysSSHAttacks_file:
+        with open('files/charlesTheHaleysSSHAttacks.json', 'a') as charlesTheHaleysSSHAttacks_file:
             charlesTheHaleysSSHAttacks_file.write(
                 "{\"IPAddress\":\"" + lastRow[1].strip() + "\", \"category\": \"ssh_attack\"}\n")
-    os.remove('charlesTheHaleysSSHAttacks.txt')
+    os.remove('files/charlesTheHaleysSSHAttacks.txt')
+    zipfile.ZipFile('archive/charlesTheHaleysSSHAttacks.zip', mode='w').write('files/charlesTheHaleysSSHAttacks.json', arcname='charlesTheHaleysSSHAttacks.json')
+    logging.info('Charles The-Haleys feed updated.')
 
 
 def blocklistDE():
@@ -182,16 +212,19 @@ def blocklistDE():
             data = data.split("\n")
             for IP in data:
                 if IP:
-                    with open('blocklistDE.json', 'a') as blocklistDE_file:
+                    with open('files/blocklistDE.json', 'a') as blocklistDE_file:
                         blocklistDE_file.write(
                             "{\"IPAddress\":\"" + IP + "\", \"category\": \"attack\", \"subcategory\": \"" + service + "\", \"last_update\": \"" + str(
                                 TurkeyTime) + "\" }\n")
             blocklistDE_file.close()
         else:
             print("There is no data on " + str(TurkeyTime) + " in " + service)
+    zipfile.ZipFile('archive/blocklistDE.zip', mode='w').write('files/blocklistDE.json', arcname='blocklistDE.json')
+    logging.info('Block List DE Services feeds updated.')
 
 
 if __name__ == '__main__':
+    createFolders()
     iocfeed()
     openphish()
     urlhaus()
