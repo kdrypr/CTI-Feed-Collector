@@ -7,10 +7,16 @@ from datetime import datetime
 from itertools import islice
 from urllib.request import Request, urlopen
 import logging
+import click
+import requests
+from elasticsearch import Elasticsearch
 
 tz = pytz.timezone('Europe/Istanbul')
 logging.basicConfig(filename='CTI.log', filemode='a', format='%(asctime)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+es = Elasticsearch(['http://localhost:9200'])
+
+elasticUrl = 'http://localhost:9200/'
 
 
 def createFolders():
@@ -21,6 +27,21 @@ def createFolders():
     if not os.path.isdir("archive"):
         os.mkdir("archive")
         logging.info('Folder not found! Archive folder created.')
+
+
+def postElastic():
+    directory = 'files/'
+    for filename in os.listdir(directory):
+        index = []
+        if filename.endswith('.json'):
+            with open(directory + filename) as f:
+                index = filename.split(".")
+                esIndex = index[0]
+                elasticIndex = "cti_" + esIndex
+                es.indices.create(index=elasticIndex.lower(), ignore=400)
+                for line in f:
+                    headers = {'content-type': 'application/json'}
+                    request = requests.post(elasticUrl + elasticIndex + "/_doc", data=line, headers=headers)
 
 
 def iocfeed():
@@ -153,7 +174,8 @@ def feodotrackerAbuse():
         json.dump(row, jsonFile)
         jsonFile.write("\n")
     os.remove('files/feodotrackerAbuse.csv')
-    zipfile.ZipFile('archive/feodotrackerAbuse.zip', mode='w').write('files/feodotrackerAbuse.json', arcname='feodotrackerAbuse.json')
+    zipfile.ZipFile('archive/feodotrackerAbuse.zip', mode='w').write('files/feodotrackerAbuse.json',
+                                                                     arcname='feodotrackerAbuse.json')
     logging.info('Feodo Tracker feeds updated and zipped.')
 
 
@@ -194,7 +216,8 @@ def charlesTheHaleysSSHAttacks():
             charlesTheHaleysSSHAttacks_file.write(
                 "{\"IPAddress\":\"" + lastRow[1].strip() + "\", \"category\": \"ssh_attack\"}\n")
     os.remove('files/charlesTheHaleysSSHAttacks.txt')
-    zipfile.ZipFile('archive/charlesTheHaleysSSHAttacks.zip', mode='w').write('files/charlesTheHaleysSSHAttacks.json', arcname='charlesTheHaleysSSHAttacks.json')
+    zipfile.ZipFile('archive/charlesTheHaleysSSHAttacks.zip', mode='w').write('files/charlesTheHaleysSSHAttacks.json',
+                                                                              arcname='charlesTheHaleysSSHAttacks.json')
     logging.info('Charles The-Haleys feed updated.')
 
 
@@ -234,3 +257,6 @@ if __name__ == '__main__':
     IPSpamList()
     charlesTheHaleysSSHAttacks()
     blocklistDE()
+
+    if click.confirm('Do you want to import all cti json feeds to elasticsearch?', default=True):
+        postElastic()
