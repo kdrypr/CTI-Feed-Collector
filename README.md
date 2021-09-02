@@ -18,6 +18,8 @@ Open Source Cyber Threat Intelligence Feed Collector
 
 ![GitHub Logo](/elastic.png)
 
+![GitHub Logo](/elasticSize.png)
+
 ## Feed Resources
 * iocfeed.mrlooquer.com
 * openphish.com
