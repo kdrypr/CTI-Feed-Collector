@@ -30,7 +30,10 @@ Open Source Cyber Threat Intelligence Feed Collector
 ## Roadmap
 
 - [X] Writing to JSON file
+- [X] Elasticsearch import added
+- [X] Archive system added 
 - [ ] New resources will be added
 - [ ] CSV export option
 - [ ] Scheduled feed update
+- [ ] Search from archive
 
