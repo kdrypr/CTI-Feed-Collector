@@ -38,6 +38,6 @@ Open Source Cyber Threat Intelligence Feed Collector
 - [X] Archive system added 
 - [ ] New resources will be added
 - [ ] CSV export option
-- [ ] Scheduled feed update
+- [X] Scheduled feed update
 - [ ] Search from archive
 
