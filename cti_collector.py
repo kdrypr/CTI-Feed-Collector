@@ -33,6 +33,7 @@ def installElasticsearch():
                       out='downloads')
         command = 'dpkg -i downloads/elasticsearch-7.14.1-amd64.deb'
         os.system('sudo -S %s' % (command))
+        logging.info("Elasticseach service installed.")
 
 
 def installKibana():
@@ -40,6 +41,7 @@ def installKibana():
         wget.download('https://artifacts.elastic.co/downloads/kibana/kibana-7.14.1-amd64.deb', out='downloads')
         command = 'dpkg -i downloads/kibana-7.14.1-amd64.deb'
         os.system('sudo -S %s' % (command))
+        logging.info("Kibana service installed.")
 
 
 def configureServices():
@@ -49,15 +51,20 @@ def configureServices():
         file.write_text(file.read_text().replace('#node.name: node-1', 'node.name: node-1'))
         file.write_text(file.read_text().replace('#network.host: localhost', 'network.host: localhost'))
         file.write_text(file.read_text().replace('#http.port: 9200', 'http.port: 9200'))
+        logging.info("Elasticsearch service configured.")
 
         file = Path('/etc/kibana/kibana.yml')
         file.write_text(file.read_text().replace('#elasticsearch.hosts: ["http://localhost:9200"]',
                                                  'elasticsearch.hosts: ["http://localhost:9200"]'))
         file.write_text(file.read_text().replace('#server.host: "localhost"', 'server.host: "localhost"'))
         file.write_text(file.read_text().replace('#server.port: 5601', 'server.port: 5601'))
+        logging.info("Kibana service configured.")
 
         os.system("service elasticsearch restart")
+        logging.info("Elasticsearch service restarted!")
+        time.sleep(2)
         os.system("service kibana restart")
+        logging.info("Kibana service restarted!")
     except:
         print("Permission denied! Please run script with sudo privileges!")
         logging.info("Permission denied! Script did not run with sudo privileges!")
@@ -295,6 +302,7 @@ def feedService():
 def scheduleService():
     sTime = input("Please input your interval value with minute type! : ")
     schedule.every(int(sTime)).minutes.do(feedService)
+    logging.info("Feed service was scheduled with " + sTime + " minutes.")
     while True:
         schedule.run_pending()
         time.sleep(1)
