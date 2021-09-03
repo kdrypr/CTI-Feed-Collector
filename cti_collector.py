@@ -1,4 +1,4 @@
-import csv, json, os, zipfile, pytz, logging, click, requests, wget
+import csv, json, os, zipfile, pytz, logging, click, requests, wget, sys, time, schedule
 from datetime import datetime
 from itertools import islice
 from urllib.request import Request, urlopen
@@ -280,10 +280,7 @@ def blocklistDE():
     logging.info('Block List DE Services feeds updated.')
 
 
-if __name__ == '__main__':
-    createFolders()
-    installElasticsearch()
-    configureServices()
+def feedService():
     iocfeed()
     openphish()
     urlhaus()
@@ -294,5 +291,24 @@ if __name__ == '__main__':
     charlesTheHaleysSSHAttacks()
     blocklistDE()
 
+
+def scheduleService():
+    sTime = input("Please input your interval value with minute type! : ")
+    schedule.every(int(sTime)).minutes.do(feedService)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+if __name__ == '__main__':
+    createFolders()
+    installElasticsearch()
+    installKibana()
+    configureServices()
+    feedService()
+
     if click.confirm('Do you want to import all cti json feeds to elasticsearch?', default=True):
         postElastic()
+
+    if click.confirm('Do you want to update all feeds with scheduled?', default=True):
+        scheduleService()
