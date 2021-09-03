@@ -1,15 +1,9 @@
-import csv
-import json
-import os
-import zipfile
-import pytz
+import csv, json, os, zipfile, pytz, logging, click, requests, wget
 from datetime import datetime
 from itertools import islice
 from urllib.request import Request, urlopen
-import logging
-import click
-import requests
 from elasticsearch import Elasticsearch
+from pathlib import Path
 
 tz = pytz.timezone('Europe/Istanbul')
 logging.basicConfig(filename='CTI.log', filemode='a', format='%(asctime)s - %(message)s',
@@ -26,6 +20,47 @@ def createFolders():
     if not os.path.isdir("archive"):
         os.mkdir("archive")
         logging.info('Folder not found! Archive folder created.')
+
+    if not os.path.isdir("downloads"):
+        os.mkdir("downloads")
+        logging.info('Folder not found! Downloads folder created.')
+
+
+def installElasticsearch():
+    if click.confirm('Do you want to install Elasticsearch?', default=True):
+        print("Elasticsearch bundle does not need java. Java included.")
+        wget.download('https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.14.1-amd64.deb',
+                      out='downloads')
+        command = 'dpkg -i downloads/elasticsearch-7.14.1-amd64.deb'
+        os.system('sudo -S %s' % (command))
+
+
+def installKibana():
+    if click.confirm('Do you want to install Kibana?', default=True):
+        wget.download('https://artifacts.elastic.co/downloads/kibana/kibana-7.14.1-amd64.deb', out='downloads')
+        command = 'dpkg -i downloads/kibana-7.14.1-amd64.deb'
+        os.system('sudo -S %s' % (command))
+
+
+def configureServices():
+    try:
+        # Elasticsearch Configuration
+        file = Path('/etc/elasticsearch/elasticsearch.yml')
+        file.write_text(file.read_text().replace('#node.name: node-1', 'node.name: node-1'))
+        file.write_text(file.read_text().replace('#network.host: localhost', 'network.host: localhost'))
+        file.write_text(file.read_text().replace('#http.port: 9200', 'http.port: 9200'))
+
+        file = Path('/etc/kibana/kibana.yml')
+        file.write_text(file.read_text().replace('#elasticsearch.hosts: ["http://localhost:9200"]',
+                                                 'elasticsearch.hosts: ["http://localhost:9200"]'))
+        file.write_text(file.read_text().replace('#server.host: "localhost"', 'server.host: "localhost"'))
+        file.write_text(file.read_text().replace('#server.port: 5601', 'server.port: 5601'))
+
+        os.system("service elasticsearch restart")
+        os.system("service kibana restart")
+    except:
+        print("Permission denied! Please run script with sudo privileges!")
+        logging.info("Permission denied! Script did not run with sudo privileges!")
 
 
 def postElastic():
@@ -247,6 +282,8 @@ def blocklistDE():
 
 if __name__ == '__main__':
     createFolders()
+    installElasticsearch()
+    configureServices()
     iocfeed()
     openphish()
     urlhaus()
