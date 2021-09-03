@@ -1,6 +1,7 @@
-python-csv==0.0.13
-simplejson==3.16.0
+Click==7.0
+django_scheduler==0.9.5
+elasticsearch==7.9.1
 pytz==2019.3
-DateTime==4.3
-more-itertools==8.5.0
-urllib3==1.25.8
+wget==3.2
+requests==2.22.0
+schedule==1.1.0
