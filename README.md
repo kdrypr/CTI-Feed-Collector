@@ -1,6 +1,10 @@
 # CTI-Feeder
 Open Source Cyber Threat Intelligence Feed Collector
 
+## Dependencies
+
+Script was configured for Ubuntu OS. You can edit script for rpm based systems. There is no other dependencies.
+
 ## Installation
 
 * pip3 install -r requirements.txt
