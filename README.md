@@ -40,8 +40,4 @@ Script was configured for Ubuntu OS. You can edit script for rpm based systems. 
 - [X] Writing to JSON file
 - [X] Elasticsearch import added
 - [X] Archive system added 
-- [ ] New resources will be added
-- [ ] CSV export option
 - [X] Scheduled feed update
-- [ ] Search from archive
-
